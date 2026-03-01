@@ -1,0 +1,12 @@
+# Python environment
+venv/
+__pycache__/
+*.pyc
+
+# Database
+data/
+*.sqlite3
+*.db
+
+# Secrets
+.env
