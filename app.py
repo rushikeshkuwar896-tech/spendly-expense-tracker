@@ -29,7 +29,11 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static')
 app = Flask(__name__, static_folder=STATIC_DIR, static_url_path='')
 CORS(app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(BASE_DIR, 'data', 'expenses.db')}"
+# Ensure data directory exists for SQLite
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+os.makedirs(DATA_DIR, exist_ok=True)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(DATA_DIR, 'expenses.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'spendly-super-secret-key-32bytes!')
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
@@ -893,7 +897,9 @@ def init_db():
     with app.app_context():
         db.create_all()
 
+# Initialize DB for production (Gunicorn) & local
+init_db()
+
 if __name__ == '__main__':
-    init_db()
     port = int(os.environ.get('PORT', 8080))
     app.run(debug=True, host='127.0.0.1', port=port)
