@@ -423,32 +423,26 @@ def analytics_heatmap():
 
 # ─── Email Notifications ──────────────────────────────────────────────────────
 def send_email(to_email, subject, html_content):
-    """Helper to send an email using SMTP credentials from env."""
-    smtp_server = os.environ.get('SMTP_SERVER')
-    smtp_port = os.environ.get('SMTP_PORT', 587)
-    smtp_user = os.environ.get('SMTP_USERNAME')
-    smtp_pass = os.environ.get('SMTP_PASSWORD')
-
-    if not all([smtp_server, smtp_user, smtp_pass]):
-        print("SMTP credentials not configured. Skipping email.")
+    """Helper to send an email using Resend API."""
+    import resend
+    
+    resend.api_key = os.environ.get('RESEND_API_KEY')
+    if not resend.api_key:
+        print("RESEND_API_KEY not configured. Skipping email.")
         return False
 
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From'] = f"Spendly Alerts <{smtp_user}>"
-    msg['To'] = to_email
-
-    msg.attach(MIMEText(html_content, 'html'))
-
     try:
-        server = smtplib.SMTP(smtp_server, int(smtp_port))
-        server.starttls()
-        server.login(smtp_user, smtp_pass)
-        server.sendmail(smtp_user, to_email, msg.as_string())
-        server.quit()
+        # Note: Free Resend accounts can only send from onboarding@resend.dev to the verified email address
+        params = {
+            "from": "Spendly Alerts <onboarding@resend.dev>",
+            "to": to_email,
+            "subject": subject,
+            "html": html_content,
+        }
+        resend.Emails.send(params)
         return True
     except Exception as e:
-        print(f"Failed to send email: {e}")
+        print(f"Failed to send email via Resend: {e}")
         return False
 
 def check_and_send_budget_alert(user_id, category, new_expense):
